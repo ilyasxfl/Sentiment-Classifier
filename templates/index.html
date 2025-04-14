@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Classifier</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: #0f3460;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.5s ease;
+            text-align: center;
+        }
+        h1 {
+            color: #00ff85;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 4px rgba(0, 255, 133, 0.3);
+        }
+        label {
+            display: block;
+            text-align: left;
+            color: #e0e0e0;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #16213e;
+            border-radius: 10px;
+            background: #e0e0e011;
+            color: #e0e0e0;
+            font-size: 1.1em;
+            resize: none;
+            transition: border-color 0.3s ease;
+        }
+        textarea:focus {
+            border-color: #00ff85;
+            outline: none;
+        }
+        button {
+            margin: 15px 0;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            background: #00ff85;
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background: #00cc66;
+            transform: translateY(-2px);
+        }
+        #result {
+            font-size: 1.3em;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @media (max-width: 500px) {
+            .container { padding: 20px; }
+            h1 { font-size: 1.8em; }
+            textarea { height: 100px; font-size: 1em; }
+            button { padding: 10px 20px; font-size: 0.9em; }
+            #result { font-size: 1.1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sentiment Classifier</h1>
+        <label for="text">Enter your text:</label>
+        <textarea id="text" placeholder="Type your text here..."></textarea>
+        <button onclick="classifyText()">Analyze Sentiment</button>
+        <div id="result"></div>
+    </div>
+    <script>
+        function classifyText() {
+            const text = document.getElementById('text').value.trim();
+            const resultDiv = document.getElementById('result');
+            if (!text) {
+                resultDiv.innerText = 'Please enter some text!';
+                resultDiv.className = 'error';
+                return;
+            }
+
+            fetch('/classify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Classification failed');
+                return response.json();
+            })
+            .then(data => {
+                // noinspection JSUnresolvedVariable
+                console.log('Reply:', data.reply); // Debug
+                // noinspection JSUnresolvedVariable
+                resultDiv.innerText = data.reply;
+                // noinspection JSUnresolvedVariable
+                const replyLower = data.reply.toLowerCase();
+                if (replyLower.includes('positive')) {
+                    resultDiv.className = 'positive';
+                } else if (replyLower.includes('negative')) {
+                    resultDiv.className = 'negative';
+                } else {
+                    resultDiv.className = 'error';
+                }
+            })
+            .catch(error => {
+                console.log('Error:', error);
+                resultDiv.innerText = 'Oops, something broke!';
+                resultDiv.className = 'error';
+            });
+        }
+        document.getElementById('text').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                classifyText();
+            }
+        });
+    </script>
+</body>
+</html>
